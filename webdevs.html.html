@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShareBox – Gordon College</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📦%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8f8f3; --card:#f3f4ef; --white:#ffffff; --text:#1c1f1a; --muted:#5b6157; --line:#c9cdc3;
+  --g1:#1f5e27; --g2:#6fb86a; --g3:#c6bf78; --green:#1e9a2a; --gold:#f2d65c; --red:#d92d3a;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){color-scheme:dark;--bg:#151813;--card:#1e221b;--white:#252a21;--text:#eef1ea;--muted:#a9b0a2;--line:#3a4034;}
+}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#151813;--card:#1e221b;--white:#252a21;--text:#eef1ea;--muted:#a9b0a2;--line:#3a4034;}
+html{scroll-behavior:smooth;scroll-padding-top:calc(80px + env(safe-area-inset-top,0px))}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+
+/* top bar + sidebar */
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;max-width:1040px;margin:0 auto}
+.burger{display:grid;gap:5px;padding:12px;border-radius:10px;background:none;border:0;cursor:pointer}
+.burger span{display:block;width:26px;height:3px;background:var(--text);border-radius:2px}
+.burger:focus-visible{outline:3px solid var(--g2)}
+.avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g2));display:grid;place-items:center;color:#fff;font-weight:600;border:3px solid var(--white);box-shadow:0 0 0 1px var(--line)}
+.side{position:fixed;top:0;left:0;bottom:0;width:min(310px,84vw);z-index:20;background:var(--bg);padding:calc(24px + env(safe-area-inset-top,0px)) 12px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:4px;transform:translateX(-105%);visibility:hidden;transition:transform .25s,visibility .25s;overflow-y:auto;border-radius:0 24px 24px 0}
+.side.open{transform:none;visibility:visible}
+.scrim{position:fixed;inset:0;z-index:15;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.open{opacity:1;pointer-events:auto}
+.seal{text-align:center;margin-bottom:14px}
+.seal .logo{width:96px;height:96px;font-size:2.6rem;margin:0 auto 10px;border-width:4px}
+.seal b{display:block;line-height:1.3}
+.side a{display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:14px;text-decoration:none;font-weight:500;letter-spacing:.02em;background:var(--card)}
+.side a:hover,.side a:focus-visible{background:var(--line);outline:none}
+.side a.on{background:var(--line)}
+.side a.out{margin-top:auto}
+.side .ic{font-size:1.4rem;width:28px;text-align:center}
+
+.logo{border-radius:50%;background:#fff;border:3px solid var(--g2);display:grid;place-items:center}
+
+[hidden]{display:none!important}
+.login{min-height:100vh;display:grid;place-items:center;padding:28px 20px}
+.lbox{width:100%;max-width:420px;text-align:center}
+.lbox .logo{width:130px;height:130px;font-size:3.6rem;margin:0 auto 16px;border-width:5px}
+.lbox h1{margin:0;font-size:1.3rem}
+.lbox .sub{margin:2px 0;color:var(--green);font-weight:700;font-size:1.05rem}
+.lbox .ver{margin:2px 0 26px;font-weight:600;font-size:.9rem}
+.fld{display:block;position:relative;text-align:left;margin-bottom:22px}
+.fld>span{position:absolute;top:-11px;left:14px;background:var(--bg);padding:0 6px;font-size:.8rem;color:var(--muted);z-index:1}
+.fld input{padding:16px 18px;border-radius:14px}
+.fld input[type="password"],.fld input.pw{padding-right:52px}
+.eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:0;font-size:1.3rem;cursor:pointer;padding:6px;color:var(--text)}
+.lbtn{width:100%;padding:16px;border-radius:999px;border:0;font:inherit;font-weight:600;font-size:1.05rem;cursor:pointer;background:var(--green);color:#fff}
+.lbtn:disabled{background:#dcdcdc;color:#444;cursor:not-allowed}
+.lbtn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.err{color:var(--red);font-weight:500;font-size:.9rem;margin:0 0 14px;min-height:1.4em}
+.note{color:var(--muted);font-size:.85rem;text-align:left;margin:18px 0 0}
+.note a{color:var(--green)}
+.demo{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:12px 16px;font-size:.85rem;text-align:left;margin-top:18px}
+.user{position:relative}
+.user summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none}
+.user summary::-webkit-details-marker{display:none}
+.user .menu{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:8px;z-index:30}
+.user .menu p{margin:0;padding:8px 12px;font-size:.85rem;color:var(--muted)}
+.user .menu a{display:flex;gap:12px;padding:12px;border-radius:10px;text-decoration:none;font-weight:500}
+.user .menu a:hover,.user .menu a:focus-visible{background:var(--line);outline:none}
+
+.list{display:grid;gap:8px;margin:8px 0 22px}
+.row{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:.92rem}
+.row small{display:block;color:var(--muted)}
+.stat{font-size:2rem!important;font-weight:700;color:var(--green)!important;margin:0}
+.empty{color:var(--muted);font-size:.92rem;margin:0}
+.by{display:block;color:var(--muted);font-size:.8rem;margin-top:6px}
+#dashboard h3{margin:18px 0 0;font-size:1.05rem}
+.ok{color:var(--green);font-weight:600;margin:0;min-height:1.4em}
+.ok.bad{color:var(--red)}
+.hint{font-weight:400;font-size:.8rem;color:var(--muted)}
+.right{display:flex;align-items:center;gap:10px}
+.bell{position:relative;background:none;border:0;font-size:1.5rem;cursor:pointer;padding:6px 8px;border-radius:12px;line-height:1}
+.bell:hover,.bell:focus-visible{background:var(--line);outline:none}
+.badge{margin-left:auto;min-width:24px;padding:0 8px;border-radius:999px;background:var(--red);color:#fff;font-size:.78rem;font-weight:700;text-align:center;line-height:24px}
+.bell .badge{position:absolute;top:-4px;right:-4px;margin:0;min-width:20px;padding:0 5px;line-height:20px;font-size:.7rem}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:40;background:var(--g1);color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);font-weight:500;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;width:max-content;max-width:min(92vw,420px);text-align:center}
+#toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.row .when{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.row .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.row .msg{color:var(--red);font-weight:500;font-size:.85rem;margin:8px 0 0;min-height:1.2em}
+.row .sched{display:block;margin-top:8px;color:var(--green);font-weight:600}
+.btn.sm{padding:8px 16px;font-size:.85rem}
+.btn.line{background:none;border:2px solid var(--green);color:var(--green)}
+.row .st{display:inline-block;margin-top:8px;padding:2px 12px;border-radius:999px;font-size:.78rem;font-weight:600;background:#e3ecf5;color:#244a72}
+.ph{display:block;max-width:140px;border-radius:10px;margin-top:8px;cursor:zoom-in;border:1px solid var(--line)}
+.ph.big{max-width:100%;cursor:zoom-out}
+
+.btn:disabled{opacity:.6;cursor:default}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:26px}
+.tab{padding:11px;border:0;border-radius:999px;background:none;font:inherit;font-weight:600;color:var(--muted);cursor:pointer}
+.tab.on{background:var(--green);color:#fff}
+.tab:focus-visible{outline:3px solid var(--gold)}
+.lbox form{display:block;margin:0}
+
+/* hero */
+.hero{margin:20px auto;border-radius:28px;padding:56px 36px;color:#fff;background:linear-gradient(120deg,var(--g1) 0%,var(--g2) 55%,var(--g3) 100%);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-120px;top:-80px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.12);pointer-events:none}
+.hero h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1.15;margin:0 0 12px;max-width:640px;position:relative;z-index:1}
+.hero p{font-size:1.1rem;max-width:520px;margin:0 0 26px;position:relative;z-index:1}
+.hero .btn{position:relative;z-index:1}
+.btn{display:inline-block;padding:12px 26px;border-radius:999px;font-weight:600;text-decoration:none;border:0;font:inherit;font-weight:600;cursor:pointer}
+.btn.solid{background:#fff;color:var(--g1)}
+.btn.ghost{border:2px solid #fff;color:#fff;margin-left:8px}
+.btn.green{background:var(--green);color:#fff}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px;margin:20px 0}
+.card h2{margin:0 0 6px;font-size:1.6rem}
+.date{color:var(--muted);margin:0 0 14px}
+hr{border:0;border-top:1.5px solid var(--line);margin:14px 0 22px}
+.banner{display:flex;align-items:center;gap:16px;border-radius:12px 12px 0 0;padding:16px 20px;color:#fff;background:linear-gradient(90deg,#1e9a2a,#2f8a3d);border-bottom:8px solid var(--gold)}
+.banner .logo{flex:none;width:56px;height:56px;background:#fff;border-color:#fff}
+.banner b{font-size:1.05rem;line-height:1.3}
+.panel{background:var(--white);border-radius:0 0 12px 12px;padding:22px 24px}
+.panel p{margin:0 0 10px}
+.panel .hl{color:var(--green);font-weight:600}
+.panel .alert{color:var(--red);font-weight:600;font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.mini{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:20px}
+.mini .ic{font-size:1.8rem}
+.mini h3{margin:6px 0 4px;font-size:1.05rem}
+.mini p{margin:0;color:var(--muted);font-size:.92rem}
+.pill{display:inline-block;padding:2px 12px;border-radius:999px;font-size:.78rem;font-weight:600;background:#dff3dc;color:#17591f}
+.pill.new{background:#fff3c4;color:#6b5600}
+.pill.used{background:#e3ecf5;color:#244a72}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill{background:#2b4a2a;color:#cbeec8}:root:not([data-theme="light"]) .pill.new{background:#51461a;color:#fbe9a0}:root:not([data-theme="light"]) .pill.used{background:#2a3b4d;color:#c3daf1}}
+.item .thumb{height:110px;border-radius:12px;display:grid;place-items:center;font-size:3rem;margin-bottom:12px;background:linear-gradient(135deg,#dff0d6,#f4efc2)}
+.item .meta{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px;font-size:.85rem;color:var(--muted)}
+.item .btn{width:100%;text-align:center;padding:9px}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;background:var(--white);border-radius:16px;padding:16px;border:1px solid var(--line)}
+.steps li::before{content:counter(s);flex:none;width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:700}
+ul.tick{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+ul.tick li::before{content:"✔ ";color:var(--green)}
+
+/* form */
+form{display:grid;gap:14px;margin-top:8px}
+label{font-weight:500;font-size:.92rem;display:grid;gap:6px}
+input,select,textarea{font:inherit;padding:11px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--white);color:var(--text);width:100%}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--g2);border-color:var(--green)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+
+footer{margin-top:40px;padding:32px 20px calc(32px + env(safe-area-inset-bottom,0px));text-align:center;color:#fff;background:linear-gradient(120deg,var(--g1),var(--g2));border-radius:28px 28px 0 0}
+footer p{margin:4px 0}
+@media (max-width:600px){.hero{padding:40px 24px}.btn.ghost{margin:10px 0 0}.card{padding:22px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* inbox */
+.row.unread{border:2px solid var(--green)}
+.row b{font-size:1rem}
+.row .st.wait{background:#fff3c4;color:#6b5600}
+.row .st.ok{background:#dff3dc;color:#17591f}
+
+/* READY FOR PICKUP box (date + time + place) */
+.pickbox{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;background:#dff3dc;border:2px solid var(--green);border-radius:14px;padding:12px 14px;color:#17591f}
+.pickbox div{font-size:.8rem}
+.pickbox b{display:block;font-size:1.05rem;color:#0f4a16}
+
+/* multi-page additions */
+body.pre{visibility:hidden}
+a.mini{display:block;text-decoration:none;color:inherit}
+a.mini:hover,a.mini:focus-visible{border-color:var(--green);outline:none}
+.wrap{min-height:60vh}
+</style>
+</head>
+<body>
+
+<!-- LOGIN / SIGN UP -->
+<main class="login" id="login">
+  <div class="lbox">
+    <div class="logo">📦</div>
+    <h1>GORDON COLLEGE</h1>
+    <p class="sub">SHAREBOX DONATION PORTAL</p>
+    <p class="ver">ShareBox –  Demo (School Project)</p>
+
+    <div class="tabs">
+      <button type="button" class="tab on" id="t-in">Sign in</button>
+      <button type="button" class="tab" id="t-up">Sign up</button>
+    </div>
+
+    <form id="lform" novalidate>
+      <label class="fld"><span>Username*</span><input type="text" id="u" placeholder="Email/ID/Registration Number" autocomplete="username"></label>
+      <label class="fld"><span>Password*</span><input type="password" id="p" placeholder="Your password" autocomplete="current-password"><button type="button" class="eye" data-for="p" aria-label="Show password">👁</button></label>
+      <p class="err" id="err" role="alert"></p>
+      <button class="lbtn" id="lb" type="submit">Login</button>
+      <div class="demo"><b>Demo account</b> (school project)<br>Username: <code>2026-00001</code><br>Password: <code>sharebox123</code><br><b>Admin demo:</b> <code>admin</code> / <code>admin123</code></div>
+    </form>
+
+    <form id="sform" novalidate hidden>
+      <label class="fld"><span>Full name*</span><input type="text" id="s-name" placeholder="Juan Dela Cruz" autocomplete="name"></label>
+      <label class="fld"><span>Email/ID/Registration Number*</span><input type="text" id="s-id" placeholder="Your GC email or student ID" autocomplete="username"></label>
+      <label class="fld"><span>Password*</span><input type="password" id="s-p" placeholder="At least 6 characters" autocomplete="new-password"><button type="button" class="eye" data-for="s-p" aria-label="Show password">👁</button></label>
+      <label class="fld"><span>Confirm password*</span><input type="password" id="s-p2" placeholder="Type it again" autocomplete="new-password"></label>
+      <p class="err" id="s-err" role="alert"></p>
+      <button class="lbtn" id="sb" type="submit">Create account</button>
+    </form>
+
+
+  </div>
+</main>
+
+<!-- SHAREBOX (shown after login) -->
+<div id="app" hidden>
+
+<header>
+  <div class="bar">
+    <button type="button" class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+    <div class="right">
+      <button type="button" class="bell" id="mail" aria-label="Inbox">📩<span class="badge" id="mail-n" hidden>0</span></button>
+      <button type="button" class="bell" id="bell" aria-label="New donations" hidden>🔔<span class="badge" id="bell-n" hidden>0</span></button>
+      <details class="user">
+        <summary><span class="avatar" id="av">GC</span><span aria-hidden="true">▾</span></summary>
+        <div class="menu"><p id="who">Signed in</p><a href="#" data-logout>🚪 Logout</a></div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<aside class="side" id="menu" aria-label="Menu">
+  <div class="seal">
+    <div class="logo">📦</div>
+    <b>GORDON COLLEGE<br>SHAREBOX</b>
+  </div>
+  <a href="#home" data-go="home"><span class="ic">👋</span>Welcome</a>
+  <a href="#announcement" data-go="announcement"><span class="ic">📢</span>Announcement</a>
+  <a href="#how" data-go="how"><span class="ic">📋</span>How it works</a>
+  <a href="#browse" data-go="browse"><span class="ic">🎁</span>Browse Donations</a>
+  <a href="#donate" data-go="donate"><span class="ic">📝</span>Post a Donation</a>
+  <a href="#inbox" data-go="inbox"><span class="ic">📩</span>Inbox<span class="badge" id="inbox-n" hidden>0</span></a>
+  <a href="#dashboard" data-go="dashboard" id="nav-dash" hidden><span class="ic">📊</span>Admin Dashboard<span class="badge" id="nav-n" hidden>0</span></a>
+  <a class="out" href="#" data-logout><span class="ic">🚪</span>Logout</a>
+</aside>
+<div class="scrim" id="scrim"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<main class="wrap">
+
+  <!-- PAGE: HOME -->
+  <div class="page" id="pg-home" data-title="Welcome">
+    <section class="hero">
+      <h1>Welcome to Gordon College ShareBox</h1>
+      <p>Your Space to Share. Exclusive to Gordon College students.</p>
+      <a class="btn solid" href="#browse" data-go="browse">Browse donations</a>
+      <a class="btn ghost" href="#donate" data-go="donate">Post a donation</a>
+    </section>
+    <section class="card">
+      <h2>Where to go</h2>
+      <hr>
+      <div class="grid">
+        <a class="mini" href="#announcement" data-go="announcement"><p class="ic">📢</p><h3>Announcement</h3><p>The latest news about ShareBox.</p></a>
+        <a class="mini" href="#how" data-go="how"><p class="ic">📋</p><h3>How it works</h3><p>Four simple steps to donate.</p></a>
+        <a class="mini" href="#browse" data-go="browse"><p class="ic">🎁</p><h3>Browse Donations</h3><p>See what is available now.</p></a>
+        <a class="mini" href="#donate" data-go="donate"><p class="ic">📝</p><h3>Post a Donation</h3><p>Share an item you no longer use.</p></a>
+        <a class="mini" href="#inbox" data-go="inbox"><p class="ic">📩</p><h3>Inbox</h3><p>Check the status of your donations.</p></a>
+      </div>
+    </section>
+  </div>
+
+  <!-- PAGE: ANNOUNCEMENT -->
+  <div class="page" id="pg-announcement" data-title="Announcement" hidden>
+    <section class="card">
+      <h2>📢 Latest Announcement</h2>
+      
+      <hr>
+      <div class="banner">
+        <span class="logo">📦</span>
+        <b>SHAREBOX FOR GORDON COLLEGE<br>OPEN TO GC STUDENTS AND PERSONNEL ONLY</b>
+      </div>
+      <div class="panel">
+        <p><b>Donating is now easier</b> for <span class="hl">all Gordon College students and personnel</span> using ShareBox.</p>
+        <p class="alert">Please sign in with your GC domain account to post donations.</p>
+        <p><b>What you need to do:</b></p>
+        <ul class="tick">
+          <li>Choose an item you no longer use.</li>
+          <li>Post it with a photo, description, and condition.</li>
+          <li>Hand it over on campus at the pickup spot you chose.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- PAGE: HOW IT WORKS -->
+  <div class="page" id="pg-how" data-title="How it works" hidden>
+    <section class="card">
+      <h2>How it works</h2>
+      <hr>
+      <ol class="steps">
+        <li><span><b>Post.</b> Donors list an item with a photo, description, and condition.</span></li>
+        <li><span><b>Browse.</b> People in need look through the donations and check the condition.</span></li>
+        <li><span><b>Contact.</b> They check the pickup spot and contact the donor.</span></li>
+        <li><span><b>Pass it on.</b> Both sides arrange a pickup or hand-off.</span></li>
+      </ol>
+    </section>
+  </div>
+
+  <!-- PAGE: BROWSE DONATIONS -->
+  <div class="page" id="pg-browse" data-title="Browse Donations" hidden>
+    <section class="card">
+      <h2>Available Donations</h2>
+      <p class="date">Items shared by GC students and personnel. Post an item and it shows up here.</p>
+      <hr>
+      <p class="ok" id="flash" role="status"></p>
+      <div class="grid" id="items"></div>
+    </section>
+  </div>
+
+  <!-- PAGE: POST A DONATION -->
+  <div class="page" id="pg-donate" data-title="Post a Donation" hidden>
+    <section class="card">
+      <h2>Post a Donation</h2>
+      <p class="date">Fill in the details so the right person can find it and know where to pick it up.</p>
+      <hr>
+      <form id="dform" novalidate>
+        <div class="two">
+          <label>Your name<input type="text" id="f-name" name="name" placeholder="Juan Dela Cruz"></label>
+          <label>GC domain email<input type="email" id="f-email" name="contact" placeholder="your GC email"></label>
+        </div>
+        <div class="two">
+          <label>Category<select id="f-cat" name="category"><option>Clothes</option><option>Books</option><option>School supplies</option><option>Bags</option><option>Other</option></select></label>
+          <label>Condition<select id="f-cond" name="condition"><option>Brand new</option><option>Good condition</option><option>Gently used</option></select></label>
+        </div>
+        <div class="two">
+          <label>Student or employee ID<input type="text" id="f-id" name="id"></label>
+          <label>Pickup spot on campus<input type="text" id="f-spot" name="spot" placeholder="e.g. Library entrance"></label>
+        </div>
+        <label>Item name<input type="text" id="f-item" name="item" placeholder="e.g. Calculus textbook (college)"></label>
+        <label>Description<textarea id="f-desc" name="desc" rows="4" placeholder="Size, quantity, pickup area, and anything else to know."></textarea></label>
+        <label>Photo of the item <span class="hint">(optional · only admins can see this)</span><input type="file" id="f-photo" name="photo" accept="image/*"></label>
+        <p class="ok" id="f-msg" role="status"></p>
+        <button class="btn green" type="submit">Submit</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- PAGE: INBOX (donor updates) -->
+  <div class="page" id="pg-inbox" data-title="Inbox" hidden>
+    <section class="card">
+      <h2>📩 Inbox</h2>
+      <p class="date">Updates about the donations you posted.</p>
+      <hr>
+      <div class="list" id="inbox-list"></div>
+    </section>
+  </div>
+
+  <!-- PAGE: ADMIN DASHBOARD (admins only) -->
+  <div class="page" id="pg-dashboard" data-title="Admin Dashboard" hidden>
+    <section class="card">
+      <h2>Admin Dashboard</h2>
+      <p class="date">Only admins can see this. New donations appear first: set a pickup date and time, then email the donor.</p>
+      <hr>
+      <div class="grid">
+        <div class="mini"><p class="stat" id="st-n">0</p><p>New donations</p></div>
+        <div class="mini"><p class="stat" id="st-d">0</p><p>Donations posted</p></div>
+        <div class="mini"><p class="stat" id="st-m">0</p><p>Registered members</p></div>
+      </div>
+      <h3>🔔 New donations (set pickup and email the donor)</h3>
+      <div class="list" id="d-new"></div>
+      <h3>🗓 Scheduled pickups</h3>
+      <div class="list" id="d-sched"></div>
+      <h3>✅ Picked up</h3>
+      <div class="list" id="d-done"></div>
+      <h3>Members</h3>
+      <div class="list" id="d-mem"></div>
+    </section>
+  </div>
+
+</main>
+
+<footer>
+  <p><b>ShareBox · Gordon College</b></p>
+  <p>Give. Share. Reuse. A more helpful, caring, and united Gordon College community.</p>
+  <p style="opacity:.8;font-size:.85rem">© 2026 ShareBox · For Gordon College </p>
+</footer>
+
+</div>
+
+<script>
+// ShareBox – Gordon College (front-end demo; a real site needs a server and database)
+var DEMO=[
+  {id:'2026-00001',pass:'sharebox123',name:'GC Student'},
+  {id:'admin',pass:'admin123',name:'GC Admin',role:'admin'}
+];
+var KEY='sharebox_user', AK='sharebox_accounts', IK='sharebox_items', SK='sharebox_seen_', mem={}, flash='';
+var SEED=[
+  {id:'s1',emoji:'👕',title:'School uniform set',desc:'Size M, white polo and gray pants.',cond:'Gently used',cat:'Clothes',owner:''},
+  {id:'s2',emoji:'📚',title:'College textbooks',desc:'Calculus, Physics, and Technical Writing. No torn pages.',cond:'Gently used',cat:'Books',owner:''},
+  {id:'s3',emoji:'✏️',title:'Notebook and pen bundle',desc:'10 notebooks and 20 pens, unopened.',cond:'Brand new',cat:'School supplies',owner:''},
+  {id:'s4',emoji:'🎒',title:'Backpack',desc:'Blue, with 3 compartments and working zippers.',cond:'Good condition',cat:'Bags',owner:''}
+];
+var EMO={'Clothes':'👕','Books':'📚','School supplies':'✏️','Bags':'🎒','Other':'🎁'};
+var PILL={'Brand new':'new','Good condition':'','Gently used':'used'};
+var PAGES=['home','announcement','how','browse','donate','inbox','dashboard'];
+var me=null;
+
+function $(i){return document.getElementById(i)}
+function get(k){try{var v=localStorage.getItem(k);return v==null?(mem[k]||null):v}catch(e){return mem[k]||null}}
+function put(k,v){mem[k]=v;try{localStorage.setItem(k,v)}catch(e){}}
+function del(k){delete mem[k];try{localStorage.removeItem(k)}catch(e){}}
+function sget(k){try{var v=sessionStorage.getItem(k);return v==null?(mem[k]||null):v}catch(e){return mem[k]||null}}
+function sput(k,v){mem[k]=v;try{sessionStorage.setItem(k,v)}catch(e){}}
+function sdel(k){delete mem[k];try{sessionStorage.removeItem(k)}catch(e){}}
+function load(k){try{return JSON.parse(get(k)||'[]')}catch(e){return[]}}
+function findAcct(id){
+  id=String(id).trim().toLowerCase();
+  return DEMO.concat(load(AK)).filter(function(x){return x.id.toLowerCase()===id})[0];
+}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function when(t){return new Date(t).toLocaleString()}
+
+// ---------- Sidebar menu ----------
+function menu(open){
+  $('menu').classList.toggle('open',open);
+  $('scrim').classList.toggle('open',open);
+  $('burger').setAttribute('aria-expanded',String(open));
+}
+$('burger').addEventListener('click',function(){menu(!$('menu').classList.contains('open'))});
+$('scrim').addEventListener('click',function(){menu(false)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')menu(false)});
+
+// ---------- Pages ----------
+function route(){
+  if(!me)return;
+  var n=location.hash.replace('#','');
+  if(PAGES.indexOf(n)<0||(n==='dashboard'&&me.role!=='admin'))n='home';
+  PAGES.forEach(function(p){$('pg-'+p).hidden=(p!==n)});
+  document.querySelectorAll('.side a[data-go]').forEach(function(a){
+    var on=a.getAttribute('data-go')===n;
+    a.classList.toggle('on',on);
+    if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+  });
+  menu(false);window.scrollTo(0,0);
+  document.title=$('pg-'+n).getAttribute('data-title')+' – ShareBox · Gordon College';
+  if(n==='browse')renderBrowse();
+  if(n==='inbox')renderInbox();
+  if(n==='dashboard')renderDash();
+}
+document.querySelectorAll('[data-go]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    var n=a.getAttribute('data-go');
+    if(location.hash==='#'+n)route();else location.hash=n;
+  });
+});
+window.addEventListener('hashchange',route);
+
+// ---------- Sign in / Sign up tabs ----------
+function tab(up){
+  $('lform').hidden=up;$('sform').hidden=!up;
+  $('t-in').classList.toggle('on',!up);$('t-up').classList.toggle('on',up);
+}
+$('t-in').addEventListener('click',function(){tab(false)});
+$('t-up').addEventListener('click',function(){tab(true)});
+document.querySelectorAll('.eye').forEach(function(b){
+  b.addEventListener('click',function(){
+    var i=$(b.getAttribute('data-for')),show=i.type==='password';
+    i.type=show?'text':'password';
+    b.setAttribute('aria-label',show?'Hide password':'Show password');
+  });
+});
+
+// ---------- Browse page ----------
+function renderBrowse(){
+  $('flash').textContent=flash;flash='';
+  var g=$('items');g.textContent='';
+  SEED.concat(load(IK)).filter(function(d){return d.status!=='done'}).forEach(function(d){
+    var a=el('article','mini item');
+    a.appendChild(el('div','thumb',d.emoji));
+    a.appendChild(el('h3','',d.title));
+    a.appendChild(el('p','',d.desc||'No description.'));
+    var m=el('div','meta');
+    m.appendChild(el('span','pill '+(PILL[d.cond]||''),d.cond));
+    m.appendChild(el('span','',d.cat));
+    a.appendChild(m);
+    if(d.spot)a.appendChild(el('small','by','📍 Pickup: '+d.spot));
+    if(d.pickup)a.appendChild(el('small','by','🗓 Pickup schedule: '+fmtPickup(d.pickup)));
+    if(d.contact)a.appendChild(el('small','by','✉️ Contact: '+d.contact));
+    a.appendChild(el('small','by','Donated by '+(d.ownerName||'GC community')));
+    g.appendChild(a);
+  });
+}
+
+// ---------- Admin dashboard page ----------
+function fill(id,rows){
+  var c=$(id);c.textContent='';
+  if(!rows.length){c.appendChild(el('p','empty','Nothing yet.'));return}
+  rows.forEach(function(r){
+    var d=el('div','row',r[0]);d.appendChild(el('small','',r[1]));
+    if(r[2]){
+      var im=el('img','ph');im.src=r[2];im.alt='Photo of the donated item';im.title='Click to enlarge';
+      im.addEventListener('click',function(){im.classList.toggle('big')});
+      d.appendChild(im);
+    }
+    c.appendChild(d);
+  });
+}
+
+// ---------- Admin: notifications, pickup schedule, email to donor ----------
+var lastNew=0;
+function stOf(d){return d.status||'new'}
+function newCount(){return load(IK).filter(function(d){return stOf(d)==='new'}).length}
+function today(){var t=new Date();return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2)}
+function fmtPickup(p){
+  var d=new Date(p.date+'T'+p.time);
+  return d.toLocaleDateString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric'})+' at '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+}
+// separate date and time (used by the "Ready for pickup" inbox box)
+function fmtDate(p){return new Date(p.date+'T'+p.time).toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+function fmtTime(p){return new Date(p.date+'T'+p.time).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}
+function openMail(url){location.href=url}
+function mailFor(d){
+  var subject='ShareBox pickup schedule: '+d.title;
+  var body='Hi '+d.ownerName+',\n\nThank you for donating “'+d.title+'” to ShareBox! We received your post and would like to set up the pickup.\n\n'+
+    'Pickup date and time: '+fmtPickup(d.pickup)+'\nPickup spot: '+d.spot+'\n\n'+
+    'Please bring the item to the pickup spot on that date and time. If you cannot make it, reply to this email and we will set another schedule.\n\n'+
+    'Thank you for helping our community!\n\nShareBox Admin\nGordon College';
+  return 'mailto:'+encodeURIComponent(d.contact).replace('%40','@')+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+function notify(){
+  var admin=!!(me&&me.role==='admin'),n=admin?newCount():0;
+  $('bell').hidden=!admin;
+  $('bell-n').hidden=!n;$('bell-n').textContent=n;
+  $('nav-n').hidden=!n;$('nav-n').textContent=n;
+  lastNew=n;return n;
+}
+function toast(msg){
+  var t=$('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show')},8000);
+}
+// tapping the pop-up: admin goes to the dashboard, donor goes to the inbox
+function openDash(){
+  $('toast').classList.remove('show');
+  var t=(me&&me.role==='admin')?'dashboard':'inbox';
+  if(location.hash==='#'+t)route();else location.hash=t;
+}
+$('bell').addEventListener('click',openDash);
+$('toast').addEventListener('click',openDash);
+// another tab (same browser) posted a donation: alert the admin right away
+window.addEventListener('storage',function(e){
+  if(!me||me.role!=='admin'||e.key!==IK)return;
+  var prev=lastNew,n=notify();
+  if(n>prev)toast('🔔 New donation received! Tap to set the pickup date and email the donor.');
+  if(location.hash==='#dashboard')renderDash();
+  if(location.hash==='#browse')renderBrowse();
+});
+function saveItem(id,fn){
+  var list=load(IK),it=list.filter(function(x){return x.id===id})[0];
+  if(!it)return;
+  fn(it);put(IK,JSON.stringify(list));renderDash();notify();return it;
+}
+function donCard(d,mode){
+  var row=el('div','row',d.ownerName+' ('+d.owner+') donated “'+d.title+'”');
+  row.appendChild(el('small','',d.cat+' · '+d.cond+' · posted '+when(d.at)));
+  row.appendChild(el('small','','✉️ '+d.contact+' · 📍 '+d.spot));
+  if(d.photo){
+    var im=el('img','ph');im.src=d.photo;im.alt='Photo of the donated item';im.title='Click to enlarge';
+    im.addEventListener('click',function(){im.classList.toggle('big')});
+    row.appendChild(im);
+  }
+  if(mode==='new'){
+    var w=el('div','when');
+    var l1=el('label','','Pickup date'),di=el('input');di.type='date';di.min=today();l1.appendChild(di);
+    var l2=el('label','','Pickup time'),ti=el('input');ti.type='time';l2.appendChild(ti);
+    w.appendChild(l1);w.appendChild(l2);row.appendChild(w);
+    var msg=el('p','msg');row.appendChild(msg);
+    var acts=el('div','acts');
+    var go=el('button','btn green sm','📧 Email donor with pickup schedule');go.type='button';
+    go.addEventListener('click',function(){
+      if(!di.value||!ti.value){msg.textContent='Choose a pickup date and time first.';return}
+      if(new Date(di.value+'T'+ti.value)<=new Date()){msg.textContent='Choose a date and time in the future.';return}
+      var it=saveItem(d.id,function(x){x.pickup={date:di.value,time:ti.value};x.status='scheduled';x.emailedAt=Date.now()});
+      if(it)openMail(mailFor(it));
+    });
+    acts.appendChild(go);row.appendChild(acts);
+  }else{
+    row.appendChild(el('span','sched','🗓 Pickup: '+fmtPickup(d.pickup)));
+    if(d.emailedAt)row.appendChild(el('small','','Email to donor prepared '+when(d.emailedAt)));
+    if(mode==='sched'){
+      var a2=el('div','acts');
+      var again=el('button','btn line sm','📧 Email again');again.type='button';
+      again.addEventListener('click',function(){openMail(mailFor(d))});
+      var done=el('button','btn green sm','Mark as picked up');done.type='button';
+      done.addEventListener('click',function(){saveItem(d.id,function(x){x.status='done';x.doneAt=Date.now()})});
+      a2.appendChild(again);a2.appendChild(done);row.appendChild(a2);
+    }else row.appendChild(el('span','st','Picked up ✓'));
+  }
+  return row;
+}
+function list(id,items,mode,empty){
+  var c=$(id);c.textContent='';
+  if(!items.length){c.appendChild(el('p','empty',empty));return}
+  items.forEach(function(d){c.appendChild(donCard(d,mode))});
+}
+function renderDash(){
+  if(!me||me.role!=='admin')return;
+  var users=load(AK),all=load(IK).slice().reverse();
+  function by(st){return all.filter(function(d){return stOf(d)===st})}
+  $('st-n').textContent=by('new').length;
+  $('st-d').textContent=all.length;
+  $('st-m').textContent=users.length;
+  list('d-new',by('new'),'new','No new donations. You will get a 🔔 alert when someone donates.');
+  list('d-sched',by('scheduled'),'sched','No scheduled pickups yet.');
+  list('d-done',by('done'),'done','Nothing picked up yet.');
+  fill('d-mem',users.map(function(u){return [u.name,u.id]}));
+}
+
+// ---------- Donor inbox ----------
+function mine(){return me?load(IK).filter(function(d){return d.owner===me.id}).reverse():[]}
+function seenMap(){try{return JSON.parse(get(SK+me.id)||'{}')}catch(e){return{}}}
+function inboxCount(){
+  if(!me)return 0;
+  var s=seenMap();
+  return mine().filter(function(d){return s[d.id]!==stOf(d)}).length;
+}
+function notifyInbox(){
+  var n=inboxCount();
+  $('inbox-n').hidden=!n;$('inbox-n').textContent=n;
+  $('mail-n').hidden=!n;$('mail-n').textContent=n;
+}
+// items that became "Ready for pickup" and the donor has not opened yet
+function readyItems(){
+  var s=seenMap();
+  return mine().filter(function(d){return stOf(d)==='scheduled'&&d.pickup&&s[d.id]!=='scheduled'});
+}
+function readyToast(r){
+  toast('📦 Ready for pickup! “'+r.title+'” on '+fmtDate(r.pickup)+' at '+fmtTime(r.pickup)+'. Tap to open your Inbox.');
+}
+function msgsFor(d){
+  var st=stOf(d),m=[{ic:'⏳',t:'Processing',x:'We received “'+d.title+'”. An admin is now reviewing your donation.',at:d.at}];
+  if(st!=='new'&&d.pickup)m.push({ic:'📦',t:'Ready for pickup',x:'Your item “'+d.title+'” is ready! Please bring it to '+d.spot+' on '+fmtDate(d.pickup)+' at '+fmtTime(d.pickup)+'. The details were also emailed to '+d.contact+'.',at:d.emailedAt||d.at});
+  if(st==='done')m.push({ic:'🎉',t:'Picked up',x:'The item was picked up. Thank you for sharing!',at:d.doneAt||d.emailedAt||d.at});
+  return m.reverse();
+}
+function renderInbox(){
+  var c=$('inbox-list');c.textContent='';
+  var items=mine(),seen=seenMap(),map={};
+  if(!items.length){c.appendChild(el('p','empty','No messages yet. Post a donation and updates will show up here.'));return}
+  items.forEach(function(d){
+    var st=stOf(d),row=el('div','row'+(seen[d.id]!==st?' unread':''));
+    row.appendChild(el('b','',d.title));
+    var pill=el('span','st '+(st==='new'?'wait':'ok'),st==='new'?'Processing':st==='scheduled'?'Ready for pickup':'Picked up');
+    pill.style.marginLeft='8px';row.appendChild(pill);
+    if(st==='scheduled'&&d.pickup){
+      var box=el('div','pickbox');
+      [['📅 Date',fmtDate(d.pickup)],['🕒 Time',fmtTime(d.pickup)],['📍 Place',d.spot]].forEach(function(x){
+        var dv=el('div','',x[0]);dv.appendChild(el('b','',x[1]));box.appendChild(dv);
+      });
+      row.appendChild(box);
+    }
+    msgsFor(d).forEach(function(m){
+      row.appendChild(el('small','',m.ic+' '+m.t+': '+m.x));
+      row.appendChild(el('small','by',when(m.at)));
+    });
+    c.appendChild(row);map[d.id]=st;
+  });
+  put(SK+me.id,JSON.stringify(map));notifyInbox();
+}
+$('mail').addEventListener('click',function(){if(location.hash==='#inbox')route();else location.hash='inbox'});
+// updates from another tab (e.g. the admin set the pickup schedule)
+window.addEventListener('storage',function(e){
+  if(!me||me.role==='admin'||e.key!==IK)return;
+  var r=readyItems();
+  notifyInbox();
+  if(r.length)readyToast(r[0]);
+  if(location.hash==='#inbox')renderInbox();
+});
+
+// ---------- Screens ----------
+function showApp(a){
+  me=a;
+  $('login').hidden=true;$('app').hidden=false;
+  $('av').textContent=a.name.split(' ').filter(Boolean).map(function(w){return w[0]}).join('').slice(0,2).toUpperCase()||'GC';
+  $('who').textContent='Signed in as '+a.id+(a.role==='admin'?' (Admin)':'');
+  $('nav-dash').hidden=a.role!=='admin';
+  $('f-name').value=a.name;$('f-id').value=a.id;
+  $('f-email').value=a.id.indexOf('@')>-1?a.id:'';
+  $('f-msg').textContent='';
+  route();
+  var n=notify();
+  notifyInbox();
+  if(n>0)toast('🔔 You have '+n+' new donation'+(n===1?'':'s')+' waiting for a pickup schedule. Tap to review.');
+  if(a.role!=='admin'){var r=readyItems();if(r.length)readyToast(r[0])}
+}
+function showLogin(){
+  me=null;menu(false);notify();notifyInbox();$('toast').classList.remove('show');
+  var dd=document.querySelector('.user');if(dd)dd.open=false;
+  $('app').hidden=true;$('login').hidden=false;
+  ['u','p','s-name','s-id','s-p','s-p2'].forEach(function(i){$(i).value=''});
+  $('p').type='password';$('s-p').type='password';
+  $('err').textContent='';$('s-err').textContent='';
+  tab(false);window.scrollTo(0,0);
+  document.title='ShareBox – Gordon College';
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+}
+
+// ---------- SIGN IN / SIGN UP / LOGOUT ----------
+$('lform').addEventListener('submit',function(e){
+  e.preventDefault();
+  var u=$('u').value.trim(),p=$('p').value;
+  if(!u||!p){$('err').textContent='Enter your username and password.';return}
+  var a=findAcct(u);
+  if(!a||a.pass!==p){$('err').textContent='Wrong username or password. Try again.';$('p').value='';return}
+  sput(KEY,a.id);location.hash='home';showApp(a);
+});
+$('sform').addEventListener('submit',function(e){
+  e.preventDefault();
+  var name=$('s-name').value.trim(),id=$('s-id').value.trim(),pw=$('s-p').value,pw2=$('s-p2').value,err=$('s-err');
+  if(!name||!id||!pw||!pw2){err.textContent='Please fill in all fields.';return}
+  if(id.length<4){err.textContent='Enter a valid GC email or student ID.';return}
+  if(findAcct(id)){err.textContent='That ID or email already has an account. Sign in instead.';return}
+  if(pw.length<6){err.textContent='Password must be at least 6 characters.';return}
+  if(pw!==pw2){err.textContent='Passwords do not match.';return}
+  var list=load(AK),a={id:id,pass:pw,name:name};
+  list.push(a);put(AK,JSON.stringify(list));sput(KEY,a.id);location.hash='home';showApp(a);
+});
+document.querySelectorAll('[data-logout]').forEach(function(x){
+  x.addEventListener('click',function(e){e.preventDefault();sdel(KEY);showLogin()});
+});
+document.addEventListener('click',function(e){
+  var d=document.querySelector('.user');if(d&&!d.contains(e.target))d.open=false;
+});
+
+// ---------- POST A DONATION ----------
+function say(t,bad){var m=$('f-msg');m.textContent=t;m.classList.toggle('bad',!!bad)}
+function readPhoto(file,done){
+  if(!file){done(null);return}
+  if(file.type.indexOf('image/')!==0){done(false);return}
+  var fr=new FileReader();
+  fr.onerror=function(){done(false)};
+  fr.onload=function(){
+    var img=new Image();
+    img.onerror=function(){done(false)};
+    img.onload=function(){
+      var max=640,k=Math.min(1,max/Math.max(img.width,img.height));
+      var c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      done(c.toDataURL('image/jpeg',0.7));
+    };
+    img.src=fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+$('dform').addEventListener('submit',function(e){
+  e.preventDefault();
+  if(!me)return;
+  var title=$('f-item').value.trim(),cat=$('f-cat').value;
+  if(!$('f-name').value.trim()||!$('f-id').value.trim()){say('Enter your name and ID.',true);return}
+  if($('f-email').value.indexOf('@')<1){say('Enter your GC email address.',true);return}
+  if(!$('f-spot').value.trim()){say('Enter a pickup spot on campus.',true);return}
+  if(!title){say('Enter an item name.',true);return}
+  readPhoto($('f-photo').files[0],function(photo){
+    if(photo===false){say('That file is not a readable image. Choose a JPG or PNG photo.',true);return}
+    var list=load(IK);
+    var item={id:'u'+Date.now(),emoji:EMO[cat]||'🎁',title:title,desc:$('f-desc').value.trim(),cond:$('f-cond').value,cat:cat,spot:$('f-spot').value.trim(),contact:$('f-email').value.trim(),owner:me.id,ownerName:me.name,status:'new',at:Date.now()};
+    if(photo)item.photo=photo;
+    list.push(item);
+    put(IK,JSON.stringify(list));
+    ['f-item','f-desc','f-spot','f-photo'].forEach(function(i){$(i).value=''});
+    say('');
+    notify();
+    notifyInbox();
+    flash='Posted! “'+title+'” is now in Available Donations. The admin was notified and will email you the pickup date and time.'+(photo?' Your photo is visible to admins only.':'')+' Check your Inbox for updates.';
+    if(location.hash==='#browse')route();else location.hash='browse';
+  });
+});
+
+// stay signed in after refresh
+(function(){var s=sget(KEY),a=s&&findAcct(s);if(a)showApp(a)})();
+</script>
+
+</body>
+</html>
